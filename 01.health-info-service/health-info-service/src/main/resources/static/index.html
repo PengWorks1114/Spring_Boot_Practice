@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+      <meta charset="utf-8">
+      <title>Health & Info</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      <style>
+        pre { background: #f8f9fa; padding: 12px; border-radius: 8px; }
+      </style>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0">Health & Info</h1>
+          <div class="btn-group">
+            <a class="btn btn-outline-secondary" href="/swagger" target="_blank">開啟 Swagger</a>
+            <button id="btnRefresh" class="btn btn-primary">重新整理</button>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <h5 class="card-title mb-0">健康狀態</h5>
+                  <span id="healthBadge" class="badge text-bg-secondary">-</span>
+                </div>
+                <small class="text-muted">GET /health</small>
+                <pre class="mt-2"><code id="healthJson">{}</code></pre>
+                <div id="healthError" class="alert alert-danger d-none mt-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title mb-1">版本資訊</h5>
+                <small class="text-muted">GET /info</small>
+                <div class="mt-2">
+                  <div><strong>name：</strong><span id="name">-</span></div>
+                  <div><strong>version：</strong><span id="version">-</span></div>
+                  <div><strong>buildTime：</strong><span id="buildTime">-</span>
+                    <small class="text-muted">（<span id="buildTimeHuman">-</span>）</small>
+                  </div>
+                </div>
+                <pre class="mt-2"><code id="infoJson">{}</code></pre>
+                <div id="infoError" class="alert alert-danger d-none mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<script>
+    async function fetchJson(url) {
+        const res = await fetch(url, { headers: { 'Accept':'application/json' } });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`${res.status} ${res.statusText} - ${text}`);
+        }
+        return res.json();
+    }
+
+    function setError(elId, err) {
+        const el = document.getElementById(elId);
+        el.classList.remove('d-none');
+        el.textContent = err.message || String(err);
+    }
+
+    function clearError(elId) {
+        const el = document.getElementById(elId);
+        el.classList.add('d-none');
+        el.textContent = '';
+    }
+
+    function humanizeUtc(iso) {
+        try {
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleString();
+        } catch { return '-'; }
+    }
+
+    async function load() {
+        // Health
+        clearError('healthError');
+        try {
+            const h = await fetchJson('/health');
+            document.getElementById('healthJson').textContent = JSON.stringify(h, null, 2);
+            const badge = document.getElementById('healthBadge');
+            if (h.status === 'UP') {
+                badge.className = 'badge text-bg-success';
+                badge.textContent = 'UP';
+            } else {
+                badge.className = 'badge text-bg-secondary';
+                badge.textContent = h.status || '-';
+            }
+        } catch (e) {
+            setError('healthError', e);
+            const badge = document.getElementById('healthBadge');
+            badge.className = 'badge text-bg-secondary';
+            badge.textContent = 'DOWN';
+        }
+
+        // Info
+        clearError('infoError');
+        try {
+            const info = await fetchJson('/info');
+            document.getElementById('infoJson').textContent = JSON.stringify(info, null, 2);
+            document.getElementById('name').textContent = info.name ?? '-';
+            document.getElementById('version').textContent = info.version ?? '-';
+            document.getElementById('buildTime').textContent = info.buildTime ?? '-';
+            document.getElementById('buildTimeHuman').textContent = humanizeUtc(info.buildTime);
+        } catch (e) {
+            setError('infoError', e);
+        }
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', load);
+    load();
+</script>
+</body>
+</html>
+
+<!--程式碼邏輯說明-->
+<!--HTML 部分：-->
+
+<!--使用了 Bootstrap 5 的 CDN，以提供美觀的樣式和響應式佈局。-->
+
+<!--頁面包含兩個主要區塊（card）：一個用於顯示健康狀態，另一個用於顯示版本資訊。-->
+
+<!--在每個區塊中，都預留了顯示 API 回應 JSON 的 <pre> 標籤，以及顯示錯誤訊息的 div 標籤。-->
+
+<!--頂部有一個「重新整理」按鈕和一個開啟 Swagger 的連結。-->
+
+<!--JavaScript 部分：-->
+
+<!--fetchJson(url)：這是一個異步函式，用於向指定的 URL 發送 GET 請求。它會檢查回應的狀態碼，如果不是 ok，則拋出錯誤。-->
+
+<!--setError(elId, err) 和 clearError(elId)：這些函式用於在畫面上顯示或清除錯誤訊息，並控制錯誤訊息區塊的顯示與隱藏。-->
+
+<!--humanizeUtc(iso)：將 ISO 8601 格式的時間字串轉換為人類易讀的本地時間格式。-->
+
+<!--load()：這是核心函式，它會異步地呼叫 /health 和 /info 這兩個 API。-->
+
+<!--它首先嘗試呼叫 /health，根據回應的 status 欄位來改變健康徽章的顏色和文字。如果呼叫失敗，則將徽章設為「DOWN」並顯示錯誤。-->
+
+<!--接著，它會呼叫 /info，並將回傳的 name、version 和 buildTime 值填入到對應的 HTML 元素中。-->
+
+<!--document.getElementById('btnRefresh').addEventListener('click', load);：這行程式碼將 load() 函式繫結到「重新整理」按鈕的點擊事件上。-->
+
+<!--load();：在頁面首次載入時，會自動呼叫 load() 函式一次。-->
+<!-- -->
