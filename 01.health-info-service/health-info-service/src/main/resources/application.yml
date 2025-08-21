@@ -1,0 +1,11 @@
+server:
+  port: 8080
+
+app:
+  name: health-info-service
+  version: 1.0.0
+  buildTime: ${APP_BUILD_TIME:2025-08-21T00:00:00Z}
+
+springdoc:
+  swagger-ui:
+    path: /swagger
