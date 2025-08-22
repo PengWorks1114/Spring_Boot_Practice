@@ -6,7 +6,7 @@
 
 ## 📁 章節一覽（點擊可直接前往）
 
-### 01️ [Day 1：健康檢查與版本資訊 API](https://github.com/PengWorks1114/Spring_Boot_Practice/tree/master/01.health-info-service/health-info-service)
+### [Day 1：健康檢查與版本資訊 API](https://github.com/PengWorks1114/Spring_Boot_Practice/tree/master/01.health-info-service/health-info-service)
 - Spring Boot 專案建立與設定
 - RESTful API 設計與實作 (`/health`, `/info`)
 - Springdoc-OpenAPI 整合自動化文件
