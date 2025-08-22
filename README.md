@@ -15,3 +15,9 @@
 
 ---
 
+### [Day 2：回聲與時間伺服器](https://github.com/PengWorks1114/Spring_Boot_Practice/tree/master/02.echo-time-service/echo-time-service)
+- **RESTful API 設計與實作**：`POST /echo` (回聲服務) 與 `GET /now` (時間伺服器)。
+- **資料驗證**：使用 Bean Validation 進行請求參數驗證。
+- **全域例外處理**：統一錯誤回應格式（Problem Details）。
+- **前後端串接**：使用原生 JavaScript 與 Bootstrap 實現測試介面。
+- **時區處理**：使用 `java.time` 套件處理時區轉換。
