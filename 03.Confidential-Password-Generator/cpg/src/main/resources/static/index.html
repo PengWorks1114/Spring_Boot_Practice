@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <title>Confidential Password Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+    <h1 class="mb-3">Confidential Password Generator</h1>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form id="form">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label for="length" class="form-label">長度（6–64）</label>
+                        <input type="range" class="form-range" id="length" min="6" max="64" value="12" oninput="lenOut.innerText=this.value">
+                        <div>目前長度：<span id="lenOut">12</span></div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="digits" checked>
+                            <label class="form-check-label" for="digits">包含數字</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="symbols" checked>
+                            <label class="form-check-label" for="symbols">包含符號</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="excludeAmbiguous">
+                            <label class="form-check-label" for="excludeAmbiguous">不含易混淆字</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button id="btnGen" type="submit" class="btn btn-primary">產生密碼</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body d-flex gap-2">
+            <input id="output" class="form-control" type="text" placeholder="尚未產生" readonly>
+            <button id="btnCopy" class="btn btn-outline-secondary" type="button">複製</button>
+        </div>
+        <div class="card-footer">
+            <div class="progress" role="progressbar" aria-label="strength" aria-valuemin="0" aria-valuemax="100">
+                <div id="strengthBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <small id="strengthHint" class="text-muted">建議長度 ≥ 12 且同時包含數字與符號。</small>
+        </div>
+    </div>
+
+    <div id="alert" class="alert d-none" role="alert"></div>
+</div>
+
+<script>
+    const apiBase = '/passwords';
+    const $ = (id)=>document.getElementById(id);
+    const alertBox = $('alert');
+
+    function setAlert(msg, type='danger'){
+        alertBox.className = 'alert alert-' + type;
+        alertBox.textContent = msg;
+    }
+
+    function clearAlert(){
+        alertBox.className = 'alert d-none';
+        alertBox.textContent = '';
+    }
+
+    function strengthScore(pwd, digits, symbols){
+        if(!pwd) return 0;
+        let classes = 1; // letters
+        if(digits) classes++;
+        if(symbols) classes++;
+        const len = pwd.length;
+        // 粗略評分：長度權重 + 類別權重
+        return Math.min(100, Math.round((len/64)*70 + (classes/3)*30));
+    }
+
+    $('form').addEventListener('submit', async (e)=>{
+        e.preventDefault(); clearAlert();
+        const body = {
+            length: parseInt($('length').value,10),
+            digits: $('digits').checked,
+            symbols: $('symbols').checked,
+            excludeAmbiguous: $('excludeAmbiguous').checked
+        };
+        try{
+            const res = await fetch(apiBase, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(body)
+            });
+            if(!res.ok){
+                const err = await res.json().catch(()=>({message: res.statusText}));
+                setAlert(err.message || '產生失敗'); return;
+            }
+            const data = await res.json();
+            $('output').value = data.password;
+            const score = strengthScore(data.password, body.digits, body.symbols);
+            $('strengthBar').style.width = score + '%';
+            $('strengthHint').textContent = score < 40 ? '強度：弱' : (score < 70 ? '強度：中' : '強度：強');
+        }catch(ex){
+            setAlert('網路或伺服器錯誤，請稍後再試。');
+        }
+    });
+
+    $('btnCopy').addEventListener('click', async ()=>{
+        const val = $('output').value;
+        if(!val){ setAlert('尚未有可複製的密碼','warning'); return; }
+        await navigator.clipboard.writeText(val);
+        setAlert('已複製到剪貼簿','success');
+    });
+</script>
+</body>
+</html>
+
+<!--程式碼解說-->
+<!--這個 HTML 頁面結合了 Bootstrap 和原生 JavaScript，完成了以下功能：-->
+
+<!--表單與輸入：提供使用者調整密碼長度、選擇是否包含數字、符號及易混淆字元的介面。-->
+
+<!--非同步請求 (Async Fetch)：當使用者點擊「產生密碼」按鈕時，JavaScript 的 fetch API 會發送一個 POST 請求到 /passwords 端點。-->
+
+<!--JSON 請求主體：程式碼會將使用者在表單中選擇的選項，組合成一個 JSON 物件，並放入請求的主體中。-->
+
+<!--處理回應：當後端成功回傳密碼後，程式碼會將密碼顯示在輸出框中。如果後端回傳錯誤（例如 400 或 422），則會顯示對應的錯誤訊息。-->
+
+<!--前端邏輯：它還包含了一個簡單的 strengthScore 函數來評估密碼強度，並更新進度條和提示文字，提供了良好的使用者體驗。-->
+
