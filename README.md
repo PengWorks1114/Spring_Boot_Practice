@@ -21,3 +21,16 @@
 - **全域例外處理**：統一錯誤回應格式（Problem Details）。
 - **前後端串接**：使用原生 JavaScript 與 Bootstrap 實現測試介面。
 - **時區處理**：使用 `java.time` 套件處理時區轉換。
+
+---
+
+### [Day 3：安全密碼產生器](https://github.com/PengWorks1114/Spring_Boot_Practice/tree/master/03.Confidential-Password-Generator/cpg)
+- **核心服務層**：以 `PasswordPolicy` 策略物件為核心，實作安全密碼產生邏輯。
+- **Java 17 新特性**：使用 `record` 語法簡化資料傳輸物件（DTO）。
+- **進階資料驗證**：在 `Controller` 層使用 `@Valid` 註解觸發驗證。
+- **全域例外處理**：統一處理 `400`（驗證失敗）及 `422`（無法處理）等錯誤回應。
+- **安全實作**：使用 `SecureRandom` 產生強隨機性密碼，並提供多種客製化選項。
+- **靜態資源服務**：將原生 JavaScript 與 Bootstrap 實現的前端頁面整合至 Spring Boot 專案。
+
+
+
