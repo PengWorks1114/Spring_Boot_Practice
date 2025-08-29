@@ -22,7 +22,7 @@ public class PasswordController {
     public PasswordController(PasswordGeneratorService service) {
         this.service = service;
     }
-
+    
     @PostMapping
     public ResponseEntity<PasswordResponse> generate(@Valid @RequestBody PasswordRequest req) {
         int length = (req.length() == null) ? 12 : req.length();
