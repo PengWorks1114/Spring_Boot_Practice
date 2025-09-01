@@ -32,10 +32,6 @@
 - **安全實作**：使用 `SecureRandom` 產生強隨機性密碼，並提供多種客製化選項。
 - **靜態資源服務**：將原生 JavaScript 與 Bootstrap 實現的前端頁面整合至 Spring Boot 專案。
 
-太棒了！我們已經完成了 In-Memory URL Shortener 專案，現在是時候將它加入到你的專案總導覽中了。
-
-我已經為你的專案總覽準備好了第四個章節的介紹。這段描述將會清晰地概述我們這次專案的目標、技術重點與核心功能。
-
 ---
 
 ### [Day 4：記憶體短網址服務](https://github.com/PengWorks1114/Spring_Boot_Practice/tree/master/04.url-shortener/url-shortener)
