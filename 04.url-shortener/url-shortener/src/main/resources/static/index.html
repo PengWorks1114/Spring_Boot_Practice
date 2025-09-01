@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In-Memory URL Shortener</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin-top: 50px;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: #495057;
+        }
+        .result-box {
+            background-color: #e9ecef;
+            border-left: 5px solid #0d6efd;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .recent-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="text-center mb-4">
+        <h1>In-Memory URL Shortener</h1>
+        <p class="lead text-muted">輸入網址，快速取得短連結（資料儲存在記憶體）</p>
+    </header>
+
+    <div class="card p-4 shadow-sm">
+        <form id="shortenForm">
+            <div class="mb-3">
+                <label for="urlInput" class="form-label">原始網址</label>
+                <input type="url" class="form-control" id="urlInput" placeholder="https://example.com/path" required aria-label="原始網址輸入框">
+                <div id="urlFeedback" class="invalid-feedback"></div>
+            </div>
+            <div class="mb-3 d-flex align-items-end">
+                <div class="flex-grow-1 me-2">
+                    <label for="ttlPresetSelect" class="form-label">有效期限 (TTL)</label>
+                    <select class="form-select" id="ttlPresetSelect" aria-label="TTL 預設選項">
+                        <option value="86400" selected>1 天</option>
+                        <option value="2592000">30 天</option>
+                        <option value="7776000">90 天</option>
+                        <option value="">永不過期</option>
+                    </select>
+                </div>
+                <div style="width: 150px;">
+                    <label for="ttlCustomInput" class="form-label text-muted">或自訂 (秒)</label>
+                    <input type="number" class="form-control" id="ttlCustomInput" placeholder="秒數" min="1" max="7776000" aria-label="TTL 自訂秒數輸入框">
+                    <div id="ttlFeedback" class="invalid-feedback"></div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">產生短連結</button>
+        </form>
+
+        <div id="resultBox" class="result-box rounded">
+            <div class="d-flex justify-content-between align-items-center">
+                <span id="shortUrlDisplay" class="fw-bold fs-5 text-break"></span>
+                <div class="ms-2 d-flex">
+                    <button id="copyBtn" class="btn btn-sm btn-outline-secondary me-2" title="複製短連結">複製</button>
+                    <a id="openBtn" href="#" target="_blank" class="btn btn-sm btn-outline-secondary" title="在新分頁開啟">開啟</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>近期建立</h5>
+        <ul id="recentList" class="list-group"></ul>
+    </div>
+
+    <footer class="text-center mt-5 mb-3 text-muted">
+        <small>v0.1 | <a href="/swagger-ui.html" target="_blank" class="text-muted">API Docs</a></small>
+    </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const shortenForm = document.getElementById('shortenForm');
+    const urlInput = document.getElementById('urlInput');
+    const ttlPresetSelect = document.getElementById('ttlPresetSelect');
+    const ttlCustomInput = document.getElementById('ttlCustomInput');
+    const resultBox = document.getElementById('resultBox');
+    const shortUrlDisplay = document.getElementById('shortUrlDisplay');
+    const copyBtn = document.getElementById('copyBtn');
+    const openBtn = document.getElementById('openBtn');
+    const recentList = document.getElementById('recentList');
+    const urlFeedback = document.getElementById('urlFeedback');
+    const ttlFeedback = document.getElementById('ttlFeedback');
+
+    const MAX_TTL_SECONDS = 7776000;
+
+    // 載入 localStorage 中的歷史紀錄
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRecentLinks();
+    });
+
+    // 處理表單提交
+    shortenForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        let url = urlInput.value.trim();
+        let ttlSeconds = null;
+
+        // 優先使用自訂 TTL
+        if (ttlCustomInput.value) {
+            ttlSeconds = parseInt(ttlCustomInput.value, 10);
+            if (isNaN(ttlSeconds) || ttlSeconds < 1 || ttlSeconds > MAX_TTL_SECONDS) {
+                ttlCustomInput.classList.add('is-invalid');
+                ttlFeedback.textContent = `TTL 必須介於 1 到 ${MAX_TTL_SECONDS} 秒之間。`;
+                return;
+            }
+        } else if (ttlPresetSelect.value) {
+            ttlSeconds = parseInt(ttlPresetSelect.value, 10);
+        }
+
+        // URL 格式驗證
+        const urlPattern = /^(http|https):\/\/[^ "]+$/;
+        if (!urlPattern.test(url)) {
+            urlInput.classList.add('is-invalid');
+            urlFeedback.textContent = '網址必須以 http 或 https 開頭，且格式正確。';
+            return;
+        }
+
+        // 清除先前驗證錯誤
+        urlInput.classList.remove('is-invalid');
+        ttlCustomInput.classList.remove('is-invalid');
+
+        try {
+            const response = await fetch('/shorten', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, ttlSeconds })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // 處理後端回傳的錯誤
+                showError(data);
+                return;
+            }
+
+            // 成功後顯示結果並儲存
+            showResult(data);
+            saveToLocalStorage(data);
+        } catch (error) {
+            console.error('API Error:', error);
+            showError({ message: '連線到伺服器時發生錯誤。' });
+        }
+    });
+
+    function showError(error) {
+        // 假設錯誤碼和訊息在後端 response 中
+        let message = error.message || '發生未知錯誤';
+        // 顯示在結果區
+        alert(`錯誤：${message}`);
+    }
+
+    function showResult(data) {
+        shortUrlDisplay.textContent = data.shortUrl;
+        openBtn.href = data.shortUrl;
+        resultBox.style.display = 'block';
+
+        // 複製按鈕功能
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(data.shortUrl).then(() => {
+                alert('短連結已複製到剪貼簿！');
+            }).catch(err => {
+                console.error('無法複製文字:', err);
+            });
+        };
+    }
+
+    function saveToLocalStorage(data) {
+        const recentLinks = JSON.parse(localStorage.getItem('recentLinks')) || [];
+        const newLink = {
+            code: data.code,
+            url: urlInput.value.trim(),
+            shortUrl: data.shortUrl
+        };
+        // 檢查是否已存在，避免重複儲存
+        const existingIndex = recentLinks.findIndex(link => link.code === newLink.code);
+        if (existingIndex !== -1) {
+            recentLinks.splice(existingIndex, 1); // 刪除舊的
+        }
+        recentLinks.unshift(newLink); // 插入到最前面
+        localStorage.setItem('recentLinks', JSON.stringify(recentLinks.slice(0, 5))); // 只保留前 5 筆
+        loadRecentLinks();
+    }
+
+    function loadRecentLinks() {
+        const recentLinks = JSON.parse(localStorage.getItem('recentLinks')) || [];
+        recentList.innerHTML = ''; // 清空列表
+        recentLinks.forEach(link => {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item recent-list-item';
+
+            const linkText = document.createElement('span');
+            linkText.textContent = `${link.code} -> ${link.url}`;
+            linkText.style.width = 'calc(100% - 120px)';
+            linkText.classList.add('text-truncate');
+            linkText.title = link.url;
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'btn-group';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn btn-sm btn-outline-secondary';
+            copyBtn.textContent = '複製';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(link.shortUrl).then(() => alert('已複製！'));
+            };
+
+            const openBtn = document.createElement('a');
+            openBtn.className = 'btn btn-sm btn-outline-secondary';
+            openBtn.textContent = '開啟';
+            openBtn.href = link.shortUrl;
+            openBtn.target = '_blank';
+
+            buttonGroup.appendChild(copyBtn);
+            buttonGroup.appendChild(openBtn);
+            listItem.appendChild(linkText);
+            listItem.appendChild(buttonGroup);
+            recentList.appendChild(listItem);
+        });
+    }
+
+</script>
+</body>
+</html>
+
+
+<!--程式碼解說：-->
+
+<!--HTML 結構: 遵循設計書中的 Wireframe，使用 Bootstrap 5 建立簡單的表單、結果顯示區和歷史紀錄區塊。-->
+
+<!--Bootstrap CSS/JS: 我們直接從 CDN 引入，這讓專案更輕量，無需額外的建置步驟。-->
+
+<!--fetch API: 這是現代瀏覽器中用來發送網路請求的標準函式，取代了傳統的 XMLHttpRequest。我們用它來向後端 POST /shorten 請求。-->
+
+<!--表單驗證: 在 JavaScript 中，我們再次進行 URL 和 TTL 的格式驗證，以提供即時的用戶回饋，符合設計書中**「輸入驗證錯誤時顯示明確訊息」**的要求。-->
+
+<!--localStorage: 我們使用瀏覽器的 localStorage 來儲存最近縮短的 5 個短連結歷史紀錄。這是一種簡單的客戶端儲存方式，即使關閉瀏覽器，資料也不會遺失。-->
+
+<!--複製功能: 使用 navigator.clipboard.writeText() 方法將短連結複製到剪貼簿。-->
