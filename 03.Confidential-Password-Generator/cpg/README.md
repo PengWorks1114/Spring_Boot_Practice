@@ -26,6 +26,15 @@
 
 -----
 
+## 程式範例
+
+**訪問初始狀態**  
+![訪問初始狀態](https://imgur.com/tcErNgp.png)
+
+**按下生成密碼後**  
+![按下生成密碼後](https://imgur.com/0PBjHPo.png)
+
+
 ## 如何執行專案
 
 本專案使用 Maven 進行建置。請確保您的開發環境已安裝 **JDK 17** 及 **Maven**。
