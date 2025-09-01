@@ -37,7 +37,7 @@ public class PasswordController {
 }
 
 // 程式碼解說
-//
+
 //@RestController: 這個 Spring 註解是 @Controller 和 @ResponseBody 的組合。它告訴 Spring 這個類別是一個控制器，並且它的所有方法回傳的物件都應該直接序列化成 JSON 或 XML，然後作為 HTTP 響應的內容。
 //
 //@RequestMapping("/passwords"): 這將所有在這個類別中定義的 API 端點都前綴為 /passwords。因此，我們的 generate 方法將對應到 /passwords。
