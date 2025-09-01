@@ -1,91 +1,85 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" class="h-full bg-gray-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In-Memory URL Shortener</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>短網址服務</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 600px;
-            margin-top: 50px;
-        }
-        .form-control:focus {
-            box-shadow: none;
-            border-color: #495057;
-        }
-        .result-box {
-            background-color: #e9ecef;
-            border-left: 5px solid #0d6efd;
-            padding: 15px;
-            margin-top: 20px;
-            display: none;
-        }
-        .recent-list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .custom-shadow {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
     </style>
 </head>
-<body>
-<div class="container">
-    <header class="text-center mb-4">
-        <h1>In-Memory URL Shortener</h1>
-        <p class="lead text-muted">輸入網址，快速取得短連結（資料儲存在記憶體）</p>
-    </header>
+<body class="h-full flex items-center justify-center">
 
-    <div class="card p-4 shadow-sm">
-        <form id="shortenForm">
-            <div class="mb-3">
-                <label for="urlInput" class="form-label">原始網址</label>
-                <input type="url" class="form-control" id="urlInput" placeholder="https://example.com/path" required aria-label="原始網址輸入框">
-                <div id="urlFeedback" class="invalid-feedback"></div>
-            </div>
-            <div class="mb-3 d-flex align-items-end">
-                <div class="flex-grow-1 me-2">
-                    <label for="ttlPresetSelect" class="form-label">有效期限 (TTL)</label>
-                    <select class="form-select" id="ttlPresetSelect" aria-label="TTL 預設選項">
-                        <option value="86400" selected>1 天</option>
-                        <option value="2592000">30 天</option>
-                        <option value="7776000">90 天</option>
-                        <option value="">永不過期</option>
-                    </select>
-                </div>
-                <div style="width: 150px;">
-                    <label for="ttlCustomInput" class="form-label text-muted">或自訂 (秒)</label>
-                    <input type="number" class="form-control" id="ttlCustomInput" placeholder="秒數" min="1" max="7776000" aria-label="TTL 自訂秒數輸入框">
-                    <div id="ttlFeedback" class="invalid-feedback"></div>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">產生短連結</button>
-        </form>
+<div class="max-w-xl w-full p-8 space-y-8 bg-white rounded-lg custom-shadow">
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-900">短網址服務</h1>
+        <p class="mt-2 text-sm text-gray-500">輸入長網址，立即獲得簡短、易於分享的短連結。</p>
+    </div>
 
-        <div id="resultBox" class="result-box rounded">
-            <div class="d-flex justify-content-between align-items-center">
-                <span id="shortUrlDisplay" class="fw-bold fs-5 text-break"></span>
-                <div class="ms-2 d-flex">
-                    <button id="copyBtn" class="btn btn-sm btn-outline-secondary me-2" title="複製短連結">複製</button>
-                    <a id="openBtn" href="#" target="_blank" class="btn btn-sm btn-outline-secondary" title="在新分頁開啟">開啟</a>
-                </div>
+    <form id="shortenForm" class="space-y-6">
+        <div>
+            <label for="urlInput" class="sr-only">原始網址</label>
+            <input id="urlInput" name="url" type="url" required class="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="請輸入網址，例如：https://example.com">
+            <div id="urlFeedback" class="mt-2 text-sm text-red-600 hidden"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="ttlPresetSelect" class="block text-sm font-medium text-gray-700">有效期限 (TTL)</label>
+                <select id="ttlPresetSelect" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                    <option value="86400">1 天</option>
+                    <option value="2592000" selected>30 天</option>
+                    <option value="7776000">90 天</option>
+                    <option value="">永不過期</option>
+                </select>
             </div>
+            <div>
+                <label for="ttlCustomInput" class="block text-sm font-medium text-gray-700">或自訂 (秒)</label>
+                <input id="ttlCustomInput" type="number" min="1" max="7776000" class="mt-1 relative block w-full px-4 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="秒數">
+                <div id="ttlFeedback" class="mt-2 text-sm text-red-600 hidden"></div>
+            </div>
+        </div>
+
+        <div>
+            <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                產生短連結
+            </button>
+        </div>
+    </form>
+
+    <div id="resultBox" class="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-md hidden">
+        <p class="text-sm text-gray-500">您的短連結：</p>
+        <div class="flex items-center mt-1">
+            <span id="shortUrlDisplay" class="font-mono text-lg text-blue-600 break-all flex-1"></span>
+            <button id="copyBtn" class="ml-4 p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                </svg>
+            </button>
+            <a id="openBtn" href="#" target="_blank" class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+            </a>
         </div>
     </div>
 
-    <div class="mt-4">
-        <h5>近期建立</h5>
-        <ul id="recentList" class="list-group"></ul>
+    <div class="mt-6">
+        <h2 class="text-lg font-medium text-gray-900">近期建立</h2>
+        <ul id="recentList" class="mt-4 space-y-3"></ul>
     </div>
 
-    <footer class="text-center mt-5 mb-3 text-muted">
-        <small>v0.1 | <a href="/swagger-ui.html" target="_blank" class="text-muted">API Docs</a></small>
-    </footer>
+    <div class="text-center mt-8 text-sm text-gray-400">
+        v0.1 | <a href="/swagger-ui.html" target="_blank" class="underline hover:text-gray-500">API Docs</a>
+    </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const shortenForm = document.getElementById('shortenForm');
     const urlInput = document.getElementById('urlInput');
@@ -101,41 +95,41 @@
 
     const MAX_TTL_SECONDS = 7776000;
 
-    // 載入 localStorage 中的歷史紀錄
     document.addEventListener('DOMContentLoaded', () => {
         loadRecentLinks();
     });
 
-    // 處理表單提交
     shortenForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        let url = urlInput.value.trim();
+        // 隱藏所有錯誤訊息
+        urlInput.classList.remove('border-red-500');
+        urlFeedback.classList.add('hidden');
+        ttlCustomInput.classList.remove('border-red-500');
+        ttlFeedback.classList.add('hidden');
+
+        const url = urlInput.value.trim();
         let ttlSeconds = null;
 
-        // 優先使用自訂 TTL
         if (ttlCustomInput.value) {
             ttlSeconds = parseInt(ttlCustomInput.value, 10);
             if (isNaN(ttlSeconds) || ttlSeconds < 1 || ttlSeconds > MAX_TTL_SECONDS) {
-                ttlCustomInput.classList.add('is-invalid');
+                ttlCustomInput.classList.add('border-red-500');
                 ttlFeedback.textContent = `TTL 必須介於 1 到 ${MAX_TTL_SECONDS} 秒之間。`;
+                ttlFeedback.classList.remove('hidden');
                 return;
             }
         } else if (ttlPresetSelect.value) {
             ttlSeconds = parseInt(ttlPresetSelect.value, 10);
         }
 
-        // URL 格式驗證
         const urlPattern = /^(http|https):\/\/[^ "]+$/;
         if (!urlPattern.test(url)) {
-            urlInput.classList.add('is-invalid');
+            urlInput.classList.add('border-red-500');
             urlFeedback.textContent = '網址必須以 http 或 https 開頭，且格式正確。';
+            urlFeedback.classList.remove('hidden');
             return;
         }
-
-        // 清除先前驗證錯誤
-        urlInput.classList.remove('is-invalid');
-        ttlCustomInput.classList.remove('is-invalid');
 
         try {
             const response = await fetch('/shorten', {
@@ -147,12 +141,10 @@
             const data = await response.json();
 
             if (!response.ok) {
-                // 處理後端回傳的錯誤
                 showError(data);
                 return;
             }
 
-            // 成功後顯示結果並儲存
             showResult(data);
             saveToLocalStorage(data);
         } catch (error) {
@@ -162,18 +154,15 @@
     });
 
     function showError(error) {
-        // 假設錯誤碼和訊息在後端 response 中
-        let message = error.message || '發生未知錯誤';
-        // 顯示在結果區
+        const message = error.message || '發生未知錯誤';
         alert(`錯誤：${message}`);
     }
 
     function showResult(data) {
         shortUrlDisplay.textContent = data.shortUrl;
         openBtn.href = data.shortUrl;
-        resultBox.style.display = 'block';
+        resultBox.classList.remove('hidden');
 
-        // 複製按鈕功能
         copyBtn.onclick = () => {
             navigator.clipboard.writeText(data.shortUrl).then(() => {
                 alert('短連結已複製到剪貼簿！');
@@ -190,42 +179,46 @@
             url: urlInput.value.trim(),
             shortUrl: data.shortUrl
         };
-        // 檢查是否已存在，避免重複儲存
         const existingIndex = recentLinks.findIndex(link => link.code === newLink.code);
         if (existingIndex !== -1) {
-            recentLinks.splice(existingIndex, 1); // 刪除舊的
+            recentLinks.splice(existingIndex, 1);
         }
-        recentLinks.unshift(newLink); // 插入到最前面
-        localStorage.setItem('recentLinks', JSON.stringify(recentLinks.slice(0, 5))); // 只保留前 5 筆
+        recentLinks.unshift(newLink);
+        localStorage.setItem('recentLinks', JSON.stringify(recentLinks.slice(0, 5)));
         loadRecentLinks();
     }
 
     function loadRecentLinks() {
         const recentLinks = JSON.parse(localStorage.getItem('recentLinks')) || [];
-        recentList.innerHTML = ''; // 清空列表
+        recentList.innerHTML = '';
+        if (recentLinks.length === 0) {
+            recentList.innerHTML = '<li class="text-sm text-gray-500">尚無近期記錄。</li>';
+            return;
+        }
         recentLinks.forEach(link => {
             const listItem = document.createElement('li');
-            listItem.className = 'list-group-item recent-list-item';
+            listItem.className = 'flex items-center justify-between p-3 bg-white rounded-md custom-shadow';
 
-            const linkText = document.createElement('span');
-            linkText.textContent = `${link.code} -> ${link.url}`;
-            linkText.style.width = 'calc(100% - 120px)';
-            linkText.classList.add('text-truncate');
-            linkText.title = link.url;
+            const linkText = document.createElement('div');
+            linkText.className = 'flex flex-col flex-1 min-w-0';
+            linkText.innerHTML = `
+                <span class="font-medium text-blue-600 truncate" title="${link.shortUrl}">${link.code}</span>
+                <span class="text-xs text-gray-500 truncate" title="${link.url}">${link.url}</span>
+            `;
 
             const buttonGroup = document.createElement('div');
-            buttonGroup.className = 'btn-group';
+            buttonGroup.className = 'flex space-x-2 ml-4';
 
             const copyBtn = document.createElement('button');
-            copyBtn.className = 'btn btn-sm btn-outline-secondary';
-            copyBtn.textContent = '複製';
+            copyBtn.className = 'p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md';
+            copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>`;
             copyBtn.onclick = () => {
                 navigator.clipboard.writeText(link.shortUrl).then(() => alert('已複製！'));
             };
 
             const openBtn = document.createElement('a');
-            openBtn.className = 'btn btn-sm btn-outline-secondary';
-            openBtn.textContent = '開啟';
+            openBtn.className = 'p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md';
+            openBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>`;
             openBtn.href = link.shortUrl;
             openBtn.target = '_blank';
 
@@ -236,7 +229,6 @@
             recentList.appendChild(listItem);
         });
     }
-
 </script>
 </body>
 </html>
