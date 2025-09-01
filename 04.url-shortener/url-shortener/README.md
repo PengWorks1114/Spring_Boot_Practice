@@ -30,10 +30,8 @@
 
 ## 程式範例
 
-**訪問初始狀態**
-(https://imgur.com/5ZDehKE)
-**輸入網址後產生短網址**
-(https://imgur.com/NUNTKHb)
+![訪問初始狀態](https://imgur.com/5ZDehKE)
+![輸入網址後產生短網址](https://imgur.com/NUNTKHb)
 
 ## 如何執行專案
 
