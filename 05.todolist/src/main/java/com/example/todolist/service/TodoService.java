@@ -1,3 +1,13 @@
+// 服務 (Service) 類別是業務邏輯的處理中心。它負責協調控制器（Controller）和資料庫存取層（Repository），確保資料的處理符合我們的商業規則。例如，驗證資料、執行多個資料庫操作、或執行複雜的計算。
+//
+//依照設計書，這個服務類別會包含所有 CRUD（建立、讀取、更新、刪除）方法，並處理一些業務邏輯，例如：
+//
+//建立待辦事項時，確保標題沒有空白。
+//
+//查詢不到資料時，拋出錯誤。
+//
+//刪除前檢查資料是否存在。
+
 package com.example.todolist.service;
 
 import com.example.todolist.domain.Todo;

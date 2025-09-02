@@ -1,3 +1,8 @@
+//在 Spring Data JPA 的架構中，Repository 是我們與資料庫互動的核心。它是一個介面，只要繼承 JpaRepository，Spring 就會自動幫我們實作好最常見的 CRUD（建立、讀取、更新、刪除）方法，像是 save()、findById()、findAll() 和 deleteById()。
+//
+//除此之外，我們還可以定義自己的查詢方法。Spring 會根據方法的名稱，自動幫我們產生對應的 SQL 語法。
+
+
 package com.example.todolist.repository;
 
 import com.example.todolist.domain.Todo;

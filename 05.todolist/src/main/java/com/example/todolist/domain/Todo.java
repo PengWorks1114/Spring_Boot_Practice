@@ -1,3 +1,8 @@
+//實體 (Entity) 類別是 物件關聯對映 (ORM) 的一個概念。簡單來說，它是一個 Java 類別，會對應到資料庫中的一個表格。我們不需要自己寫 SQL 指令來建立資料表或進行資料操作，Spring Data JPA 會自動幫我們完成這些事。
+//
+//依照設計書，這個實體類別會包含四個欄位：id、title、done 和 createdAt，它們分別對應到資料庫中的四個欄位。
+
+
 package com.example.todolist.domain;
 
 import jakarta.persistence.*;
