@@ -33,10 +33,11 @@
 以下是應用程式的實際畫面：
 
 ### 初始畫面
-
+![初始畫面](https://imgur.com/jGEURWu)
 ### 新增任務
-
+![新增任務](https://imgur.com/crLnvbo)
 ### 編輯內容
+![編輯內容](https://imgur.com/gNp7Z5x)
 
 -----
 
