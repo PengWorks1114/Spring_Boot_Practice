@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Todo List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* 極簡風格微調 */
+        body { background:#f7f7f8; }
+        .app { max-width: 760px; margin: 40px auto; }
+        .card { border: none; border-radius: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .todo-item.done .title { text-decoration: line-through; opacity: .6; }
+        .form-inline-gap > * { margin-right: .5rem; }
+    </style>
+</head>
+<body>
+<div class="app container">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">Todo List</h1>
+
+        <div class="d-flex form-inline-gap mb-3">
+            <input id="titleInput" type="text" class="form-control flex-grow-1" maxlength="100" placeholder="Add a new task…">
+            <button id="addBtn" class="btn btn-dark">Add</button>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="btn-group" role="group" aria-label="Filter">
+                <input type="radio" class="btn-check" name="filter" id="filter-all" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary" for="filter-all">All</label>
+                <input type="radio" class="btn-check" name="filter" id="filter-active" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="filter-active">Active</label>
+                <input type="radio" class="btn-check" name="filter" id="filter-done" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="filter-done">Completed</label>
+            </div>
+
+            <div>
+                <select id="sortSelect" class="form-select">
+                    <option value="createdAt,desc">Newest</option>
+                    <option value="createdAt,asc">Oldest</option>
+                    <option value="title,asc">Title A–Z</option>
+                    <option value="title,desc">Title Z–A</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="listArea">
+            <div id="loading" class="text-center py-4 d-none">
+                <div class="spinner-border" role="status" aria-label="Loading"></div>
+            </div>
+            <ul id="todoList" class="list-group list-group-flush"></ul>
+            <div id="emptyState" class="text-center text-muted py-3 d-none">No items</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const api = {
+        list: (params) => fetch(`/todos?${new URLSearchParams(params)}`).then(r => r.json()),
+        create: (title) => fetch('/todos', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title})}).then(r => r.json()),
+        update: (id, payload) => fetch(`/todos/${id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}).then(r => r.json()),
+        remove: (id) => fetch(`/todos/${id}`, {method:'DELETE'})
+    };
+
+    let state = { filter: null, sort: 'createdAt,desc', page: 0, size: 100 };
+
+    const $title = document.getElementById('titleInput');
+    const $add = document.getElementById('addBtn');
+    const $list = document.getElementById('todoList');
+    const $loading = document.getElementById('loading');
+    const $empty = document.getElementById('emptyState');
+    const $sort = document.getElementById('sortSelect');
+
+    async function load() {
+        $loading.classList.remove('d-none');
+        $list.innerHTML = '';
+        let params = { sort: state.sort, page: state.page, size: state.size };
+        if (state.filter !== null) params.done = state.filter;
+        const data = await api.list(params);
+        render(data.content ?? []);
+        $loading.classList.add('d-none');
+    }
+
+    function render(items) {
+        if (!items.length) { $empty.classList.remove('d-none'); return; }
+        $empty.classList.add('d-none');
+        for (const t of items) {
+            const li = document.createElement('li');
+            li.className = `list-group-item d-flex align-items-center justify-content-between todo-item ${t.done ? 'done' : ''}`;
+            li.innerHTML = `
+        <div class="d-flex align-items-center gap-2">
+          <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="toggle">
+          <span class="title">${escapeHtml(t.title)}</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-outline-secondary edit">Edit</button>
+          <button class="btn btn-sm btn-outline-danger del">Delete</button>
+        </div>`;
+            // 切換完成
+            li.querySelector('input[type=checkbox]').addEventListener('change', async (e) => {
+                await api.update(t.id, { done: e.target.checked });
+                await load();
+            });
+            // 編輯
+            li.querySelector('.edit').addEventListener('click', async () => {
+                const next = prompt('Edit title:', t.title);
+                if (next && next.trim().length) {
+                    await api.update(t.id, { title: next.trim() });
+                    await load();
+                }
+            });
+            // 刪除
+            li.querySelector('.del').addEventListener('click', async () => {
+                if (confirm('Delete this item?')) {
+                    await api.remove(t.id);
+                    await load();
+                }
+            });
+            $list.appendChild(li);
+        }
+    }
+
+    // 事件：新增
+    $add.addEventListener('click', async () => {
+        const title = ($title.value || '').trim();
+        if (!title) return;
+        await api.create(title);
+        $title.value = '';
+        await load();
+    });
+    $title.addEventListener('keypress', (e) => { if (e.key === 'Enter') $add.click(); });
+
+    // 事件：篩選
+    document.getElementById('filter-all').addEventListener('change', () => { state.filter = null; load(); });
+    document.getElementById('filter-active').addEventListener('change', () => { state.filter = false; load(); });
+    document.getElementById('filter-done').addEventListener('change', () => { state.filter = true; load(); });
+
+    // 事件：排序
+    $sort.addEventListener('change', () => { state.sort = $sort.value; load(); });
+
+    function escapeHtml(s){return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
+
+    // 初始載入
+    load();
+</script>
+</body>
+</html>
