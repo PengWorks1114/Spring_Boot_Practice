@@ -43,3 +43,12 @@
 - **前後端整合**：使用原生 JavaScript 與 Tailwind CSS 打造簡潔現代的網頁介面。
 
 
+---
+
+### [Day 5：Todo List 待辦清單服務](https://github.com/PengWorks1114/Spring_Boot_Practice/tree/master/05.todolist)
+- **核心功能**：實現一個功能完整的待辦清單，包含建立、讀取、更新、刪除（CRUD）操作。
+- **資料庫整合**：使用 **Spring Data JPA** 與 **H2 記憶體資料庫**，自動建表並執行資料操作。
+- **分層架構設計**：嚴格遵循 **Controller、Service、Repository** 的分層模式，確保程式碼結構清晰。
+- **資料傳輸物件 (DTO)**：使用 Java `record` 和 Lombok 簡化 DTO 程式碼，並搭配 **Bean Validation** 進行資料驗證。
+- **全域錯誤處理**：統一處理常見的 HTTP 錯誤狀態碼（`400`、`404`），提供一致的回應格式。
+- **前後端整合**：後端提供 RESTful API，前端使用原生 JavaScript 透過 Fetch API 實現動態、無刷新的使用者介面。
