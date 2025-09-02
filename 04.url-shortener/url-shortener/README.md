@@ -1,5 +1,4 @@
-<img width="1915" height="872" alt="image" src="https://github.com/user-attachments/assets/310875a5-74e1-453a-b54b-ea3c85f516ad" />哈囉！這是一個很棒的 README 範本。我會根據你提供的設計書和專案實作細節，為你的「In-Memory URL Shortener」專案編寫一份內容完整、格式清晰的 README。
-
+<img width="1915" height="872" alt="image" src="https://github.com/user-attachments/assets/310875a5-74e1-453a-b54b-ea3c85f516ad" />
 -----
 
 # In-Memory URL Shortener
