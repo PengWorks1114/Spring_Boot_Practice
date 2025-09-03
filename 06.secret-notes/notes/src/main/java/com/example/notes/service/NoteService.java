@@ -24,8 +24,8 @@ import com.example.notes.repo.NoteRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.notes.exception.InvalidPassException;
 
-import java.security.AccessControlException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.Map;
@@ -73,7 +73,7 @@ public class NoteService {
         Note n = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Note not found"));
         // 註解：若有存 BCrypt，先檢核，不通過直接 403
         if (n.getPassBcryptHash() != null && !bcrypt.matches(pass, n.getPassBcryptHash())) {
-            throw new AccessControlException("Invalid pass");
+            throw new InvalidPassException("Invalid pass");
         }
 
         try {
@@ -83,7 +83,7 @@ public class NoteService {
             return new DecryptNoteResponse(n.getId(), n.getTitle(), plain);
         } catch (GeneralSecurityException ex) {
             // 註解：GCM 驗證失敗或金鑰不符 → 視同密碼錯誤
-            throw new AccessControlException("Invalid pass");
+            throw new InvalidPassException("Invalid pass");
         }
     }
 }

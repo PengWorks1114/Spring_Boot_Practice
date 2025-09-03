@@ -23,7 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import java.security.AccessControlException;
+import com.example.notes.exception.InvalidPassException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,7 +58,7 @@ public class NoteController {
         return problem(req, 404, "Not Found", ex.getMessage());
     }
 
-    @ExceptionHandler({AccessControlException.class})
+    @ExceptionHandler({InvalidPassException.class})
     public ResponseEntity<Map<String,Object>> handleForbidden(HttpServletRequest req, Exception ex) {
         return problem(req, 403, "Forbidden", ex.getMessage());
     }
